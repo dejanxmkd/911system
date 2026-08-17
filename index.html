@@ -8,27 +8,50 @@
 </head>
 <body>
   <main class="prototype-shell">
-    <section class="units-panel" aria-label="Units prototype">
+    <section class="prototype-card" aria-label="Unit grouping prototype">
+      <header class="prototype-header">
+        <div>
+          <p class="eyebrow">Dispatch · Units</p>
+          <h1>Unit grouping</h1>
+        </div>
+        <div class="context-tabs" id="context-tabs" role="tablist" aria-label="Prototype context">
+          <button class="context-tab active" data-context="details">CFS details</button>
+          <button class="context-tab" data-context="map">Map view</button>
+        </div>
+      </header>
+
       <div class="units-toolbar">
-        <div class="search-wrap"><span>⌕</span><input id="unit-search" placeholder="Search..." /></div>
-        <button class="icon-btn" aria-label="Filters">☷</button>
+        <div class="search-field">
+          <span class="search-icon">⌕</span>
+          <input id="unit-search" type="search" placeholder="Search..." autocomplete="off" />
+        </div>
+        <button class="icon-button" type="button" aria-label="Filters">≡</button>
       </div>
 
-      <div class="units-tabs" id="unit-tabs">
-        <button data-tab="available" class="active">Available <span class="count" id="available-count">0</span></button>
-        <button data-tab="assigned">Assigned <span class="count" id="assigned-count">0</span></button>
+      <div class="unit-tabs" id="unit-tabs" role="tablist">
+        <button class="unit-tab active" data-tab="available">Available <span class="count-badge" id="available-count"></span></button>
+        <button class="unit-tab" data-tab="assigned">Assigned <span class="count-badge" id="assigned-count"></span></button>
+        <button class="unit-tab" data-tab="offduty">Off duty <span class="count-badge" id="offduty-count"></span></button>
       </div>
 
-      <div class="subfilter" id="subfilter">
-        <span>Current status</span>
-        <div class="chips"><button class="chip active">All</button><button class="chip">Active</button></div>
-      </div>
+      <div class="substatus" id="substatus"></div>
+      <div class="context-note" id="context-note"></div>
+      <div class="unit-list" id="unit-list" aria-live="polite"></div>
+    </section>
 
-      <div class="drop-help" id="drop-help">Drop unit on another unit to group</div>
-      <div class="units-list" id="units-list"></div>
-      <div class="toast" id="toast" role="status"></div>
+    <section class="log-card">
+      <div class="log-header">
+        <div>
+          <p class="eyebrow">Prototype state</p>
+          <h2>Logs</h2>
+        </div>
+        <button class="text-button" id="reset-demo" type="button">Reset demo</button>
+      </div>
+      <div class="log-feed" id="log-feed"></div>
     </section>
   </main>
+
+  <div class="toast" id="toast" role="status"></div>
   <script src="app.js"></script>
 </body>
 </html>
