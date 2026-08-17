@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,61 +7,28 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="app-shell">
-    <aside class="rail" aria-label="Primary navigation">
-      <div class="brand">911</div>
-      <button class="rail-btn">⌂</button><button class="rail-btn">⌕</button><button class="rail-btn active">◫</button>
-      <button class="rail-btn">◇</button><button class="rail-btn">◎</button><button class="rail-btn">▦</button>
-      <div class="rail-spacer"></div>
-      <button class="rail-btn">⚙</button>
-      <div class="avatar">DA</div>
-    </aside>
-
-    <aside class="calls-panel">
-      <div class="panel-header compact"><div><div class="eyebrow">Call for service</div><h2>Active dispatch requests</h2></div><button class="icon-btn">⋯</button></div>
-      <div class="segmented"><button class="active">CFS list</button><button>Units</button></div>
-      <div class="call-list" id="call-list"></div>
-    </aside>
-
-    <main class="workspace">
-      <header class="topbar">
-        <div class="topbar-left"><button class="danger-btn">Actions⌄</button><span class="cfs-number">CFS2507027</span><span class="tag danger-soft">New</span></div>
-        <div class="topbar-right"><span>◷ 2</span><span>♙ 3</span><span>◌ 0</span><span>⌁ 1</span></div>
-      </header>
-
-      <div class="mode-bar">
-        <div class="segmented small" id="page-mode"><button data-mode="details" class="active">CFS details</button><button data-mode="map">Map view</button></div>
-        <span class="hint">Unit grouping works in both views</span>
+  <main class="prototype-shell">
+    <section class="units-panel" aria-label="Units prototype">
+      <div class="units-toolbar">
+        <div class="search-wrap"><span>⌕</span><input id="unit-search" placeholder="Search..." /></div>
+        <button class="icon-btn" aria-label="Filters">☷</button>
       </div>
 
-      <section class="content-area">
-        <div class="details-view" id="details-view">
-          <div class="details-grid">
-            <section class="card address-card"><div class="section-title">Address information</div><div class="two-col"><label>Address<input value="440 9th St" /></label><label>Sub-address<input value="/" /></label></div><label>Information<input value="" placeholder="Add information" /></label></section>
-            <section class="card map-card"><div class="map-placeholder"><div class="map-pin">●</div><span>Map</span></div><div class="map-caption">440 9th St · Monticello</div></section>
-            <section class="card emergency-card"><div class="section-title">Emergency details</div><div class="two-col"><label>Incident<div class="field-like"><span class="tag danger">MED EMS</span><span>⌄</span></div></label><label>Severity<div class="severity-row"><button class="sev active">High</button><button class="sev">Medium</button><button class="sev">Low</button></div></label></div><label>Assigned agencies<div class="field-like"><span class="tag danger">Agency name</span><span class="tag danger">Agency name 2</span></div></label></section>
-            <section class="card narrative-card"><div class="section-title">Live information</div><div class="empty-copy">No message to display</div></section>
-          </div>
-          <nav class="bottom-tabs"><button class="active">Home</button><button>Vehicles</button><button>CFS information</button><button>Recommended procedure</button><button>Media</button><button>Logs</button><button>Timeline</button></nav>
-        </div>
+      <div class="units-tabs" id="unit-tabs">
+        <button data-tab="available" class="active">Available <span class="count" id="available-count">0</span></button>
+        <button data-tab="assigned">Assigned <span class="count" id="assigned-count">0</span></button>
+      </div>
 
-        <div class="map-view hidden" id="map-view">
-          <div class="full-map-grid"></div>
-          <div class="map-overlay-card"><b>CFS2507027</b><span>440 9th St</span></div>
-          <div class="map-unit-dot a">A52</div><div class="map-unit-dot b">B25</div><div class="map-unit-dot c">1002</div>
-        </div>
-      </section>
-    </main>
+      <div class="subfilter" id="subfilter">
+        <span>Current status</span>
+        <div class="chips"><button class="chip active">All</button><button class="chip">Active</button></div>
+      </div>
 
-    <aside class="units-panel">
-      <div class="units-toolbar"><div class="search-wrap"><span>⌕</span><input id="unit-search" placeholder="Search..." /></div><button class="icon-btn" id="filter-btn">☷</button></div>
-      <div class="units-tabs" id="unit-tabs"><button data-tab="available" class="active">Available <span class="count" id="available-count">0</span></button><button data-tab="assigned">Assigned <span class="count" id="assigned-count">0</span></button><button data-tab="offduty">Off duty <span class="count" id="offduty-count">0</span></button></div>
-      <div class="subfilter" id="subfilter"><span>Current status</span><div class="chips"><button class="chip active">All</button><button class="chip">Active</button></div></div>
-      <div class="drop-help" id="drop-help">Drag a unit card onto another unit card to group them</div>
+      <div class="drop-help" id="drop-help">Drop unit on another unit to group</div>
       <div class="units-list" id="units-list"></div>
       <div class="toast" id="toast" role="status"></div>
-    </aside>
-  </div>
+    </section>
+  </main>
   <script src="app.js"></script>
 </body>
 </html>
