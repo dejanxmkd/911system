@@ -4,57 +4,33 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>911systems — Unit Grouping Prototype</title>
-  <link rel="stylesheet" href="./styles.css?v=202608180001" />
+  <link rel="stylesheet" href="styles.css?v=unit-cards-3" />
 </head>
 <body>
   <main class="prototype-page">
-    <div class="prototype-controls" aria-label="Prototype controls">
-      <div class="context-switch" role="group" aria-label="Dispatch context">
-        <button class="control-btn active" data-context="details">CFS details</button>
-        <button class="control-btn" data-context="map">Map view</button>
+    <section class="units-sidebar" aria-label="Units">
+      <div class="toolbar-row">
+        <label class="search-field"><span class="search-symbol">⌕</span><input id="unit-search" placeholder="Search..." autocomplete="off"></label>
+        <button class="icon-button" aria-label="Filters">☷</button>
       </div>
-      <button class="control-btn destructive" id="close-cfs">Close CFS</button>
-      <button class="control-btn" id="reset-demo">Reset demo</button>
-      <span class="context-note" id="context-note">CFS details · Units</span>
-    </div>
-
-    <section class="units-sidebar" aria-label="CFS units">
-      <div class="sidebar-top">
-        <div class="toolbar-row">
-          <label class="search-field">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-            <input id="unit-search" placeholder="Search units..." autocomplete="off" />
-          </label>
-          <button class="icon-button" id="filter-button" aria-label="Filters" aria-expanded="false">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16M7 12h10M10 19h4"></path></svg>
-          </button>
-        </div>
-        <div class="filter-popover" id="filter-popover" hidden>
-          <div class="filter-heading">Filters</div>
-          <button class="filter-option active" data-filter="all">All units <span>✓</span></button>
-          <button class="filter-option" data-filter="police">Police <span>✓</span></button>
-          <button class="filter-option" data-filter="fire">Fire <span>✓</span></button>
-        </div>
-
-        <div class="lifted-tabs" id="unit-tabs" role="tablist">
-          <button class="lifted-tab active" data-tab="available" role="tab">Available <span class="count-badge" id="available-count">0</span></button>
-          <button class="lifted-tab" data-tab="assigned" role="tab">Assigned <span class="count-badge" id="assigned-count">0</span></button>
-          <span class="active-dot" aria-hidden="true"></span>
-        </div>
+      <div class="unit-tabs" id="unit-tabs">
+        <button class="unit-tab active" data-tab="available">Available <span class="count-badge" id="available-count">0</span></button>
+        <button class="unit-tab" data-tab="assigned">Assigned <span class="count-badge" id="assigned-count">0</span></button>
       </div>
-
-      <div class="status-filter-wrap" id="status-filter-wrap"></div>
+      <div class="status-filter" id="status-filter"></div>
       <div class="drag-message" id="drag-message" hidden>Drop onto another unit to group</div>
-      <div class="units-scroll" id="units-list"></div>
+      <div class="units-list" id="units-list"></div>
     </section>
 
-    <aside class="event-log" aria-label="Prototype logs">
-      <div class="event-log-title">Logs</div>
-      <div id="log-list"></div>
+    <aside class="prototype-tools">
+      <div class="tool-row"><span>Context</span><div class="context-switch" id="context-switch"><button class="active" data-context="details">CFS details</button><button data-context="map">Map view</button></div></div>
+      <button class="tool-button" id="close-cfs">Close CFS</button>
+      <button class="tool-button" id="reset-demo">Reset demo</button>
+      <div class="logs-title">Logs</div>
+      <div id="log-list" class="log-list"></div>
     </aside>
-
-    <div class="toast" id="toast" role="status" aria-live="polite"></div>
   </main>
-  <script src="./app.js?v=202608180001"></script>
+  <div class="toast" id="toast"></div>
+  <script src="app.js?v=unit-cards-3"></script>
 </body>
 </html>
