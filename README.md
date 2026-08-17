@@ -1,16 +1,22 @@
 # 911systems — Unit Grouping Prototype
 
-Pure HTML/CSS/JavaScript prototype for the new Unit grouping behavior on Dispatch.
+Pure HTML/CSS/JavaScript prototype for unit grouping on Dispatch.
 
-## Non-negotiable component rule
+## PERMANENT SOURCE-OF-TRUTH RULE — DO NOT OVERRIDE
 
-**Always use only the components and UI patterns that already exist in the provided 911systems frontend. Do not redesign, restyle, replace, wrap, or invent alternative Unit components unless the task explicitly requires a new component.**
+**The provided 911systems frontend repository is the only UI/design-system source of truth.**
 
-The source of truth is the dark/new Unit UI in the provided frontend. The white Figma screens/sketches are used only to understand grouping flow and animation; they are never a visual source.
+For every current and future change to this prototype:
 
-## Source components used as the design-system reference
+- Use only components, patterns, states, spacing, typography, colors, borders, badges, buttons, tabs, filters, unit rows, expanded sections, action layouts, animations, and interaction conventions that already exist in the provided frontend files.
+- Do not visually recreate or "interpret" a component from a screenshot when the component exists in the frontend source. Read the source component and mirror its structure and styling.
+- Do not invent alternative UI, wrappers, cards, controls, layouts, colors, spacing, icons, or design-system patterns.
+- Do not redesign existing components.
+- New task logic may be added only on top of the existing components/patterns, with the minimum new UI required by the task.
+- The dark **Unit Cards Definition** and the corresponding source files are authoritative. White screens/sketches are **flow/behavior references only** and must never be used as the visual source.
+- If a screenshot and the source code differ, follow the current source code unless the user explicitly says the screenshot is the newer definition.
 
-The static prototype is a direct HTML/CSS/JS translation of the structure and behavior in these existing source files:
+### Unit component sources used as authority
 
 - `apps/cad/src/components/units/UnitListItem.tsx`
 - `apps/cad/src/components/units/UnitListPanel.tsx`
@@ -20,42 +26,33 @@ The static prototype is a direct HTML/CSS/JS translation of the structure and be
 - `apps/cad/src/components/units/BoardFilters.tsx`
 - `apps/cad/src/components/units/SubStatusFilter.tsx`
 - `apps/cad/src/components/units/status.ts`
-- `apps/cad/src/components/units/unit-drag-image.ts`
 - `apps/cad/src/components/units/unit-sections/status-actions/ActiveActions.tsx`
 - `apps/cad/src/components/units/unit-sections/status-actions/AssignmentStepper.tsx`
-- `apps/cad/src/routes/_authenticated/cfs/_dispatch/$cfsId/units.tsx`
-- `apps/cad/src/index.css` for the actual dark theme tokens.
+- shared `@911/ui` Button / Badge / Collapsible patterns and the existing dark theme tokens
 
-Because this deliverable must stay pure HTML/CSS/vanilla JS, React/Radix components are not imported at runtime. Their DOM hierarchy, spacing, tabs, badges, filters, expanded fields, action surfaces, status stepper, theme values, and drag behavior are translated directly into the static prototype.
+## Card behavior mirrored from `UnitListItem.tsx`
 
-## Grouping behavior implemented
+- 2px agency stripe on the left.
+- Unit name + agency abbreviation + type on one line.
+- Existing status badge palette from `status.ts`.
+- Address / Offline secondary line.
+- Chevron + collapsible expanded body.
+- Existing fields layout for Call, Shift, Standby, Crew, Vehicles.
+- Existing fade-divider before actions.
+- Existing `ActiveActions` arrangement in Available.
+- Existing `AssignmentStepper` arrangement in Assigned.
+- Group collapsed summary follows the actual `UnitListItem.tsx` grouping block: `Group · N units` plus compact sub-unit rows.
+- Expanded grouping follows the actual source: `Ungroup all`, then `Sub-units · controlled by [top unit]`, effective inherited status, `Follows [top unit]`, fields, and `Ungroup unit`.
 
-- Works in both CFS details and Map view contexts.
-- Available and Assigned use the existing lifted tabs pattern.
-- Drag one Unit row onto another Unit row to group it.
-- The dragged Unit becomes a sub-unit of the target/top Unit.
-- A sub-unit inherits the top Unit's assignment, tab, address, and status.
-- Status changes on the top Unit cascade to every sub-unit.
-- Normal action surfaces are removed from sub-units; only `Ungroup` remains.
-- `Ungroup` on a sub-unit removes only that Unit.
-- `Ungroup` on the top Unit removes all sub-units.
-- The group starts collapsed after drop and expands through the same UnitListItem collapsible interaction.
-- Assigning a group to a CFS moves every member to Assigned.
-- Closing the CFS keeps the group together and moves the group according to the top Unit.
-- Ungrouping restores each Unit's original behavior. In the required example, `1002 – Fire Truck` returns to Standby after it is removed from the `1001 – Police Car` group.
-- Logs record grouped assignment, including `1001 – Police Car with sub-unit 1002 – Fire Truck was assigned to CFS2507027`.
+## Grouping logic
 
-## Recommended test flow
-
-1. In **Available**, drag `1002 – Fire Truck` onto `1001 – Police Car`.
-2. Click `1001 – Police Car` to expand the collapsed group.
-3. Click **Assign to CFS**.
-4. In **Assigned**, use the existing assignment stepper to set the top Unit to **On Scene**.
-5. Use **Close CFS** in the prototype controls. The group moves together to Available.
-6. Expand `1002 – Fire Truck` under the group and click **Ungroup**. It restores its original Standby behavior.
-
-## Files
-
-- `index.html` — static composition of the existing Unit system UI.
-- `styles.css` — source-derived dark theme and Unit component styling.
-- `app.js` — prototype state and new grouping behavior only.
+- Drag one unit card onto another.
+- Dropped unit becomes a sub-unit of the target/top unit.
+- Sub-units inherit top-unit CFS state/status.
+- Sub-units expose no normal unit actions.
+- Top-unit status changes cascade to all sub-units.
+- Top-unit `Ungroup all` removes every sub-unit.
+- Sub-unit `Ungroup unit` removes only that unit.
+- Groups remain together when a CFS closes and follow the top unit's close behavior.
+- After ungrouping, the unit returns to its original behavior.
+- Assignment logs include the top unit and sub-unit(s).
