@@ -9,7 +9,7 @@
     }
   },
   "postCreateCommand": "pip install -r requirements.txt",
-  "postStartCommand": "bash -lc 'mkdir -p checkpoints runtime dataset && nohup env PYTHONPATH=src uvicorn bgremove.api:app --host 0.0.0.0 --port 8000 > /tmp/bgremove-api.log 2>&1 &'",
+  "postStartCommand": "bash -lc 'mkdir -p checkpoints runtime dataset; nohup env PYTHONPATH=src python -m uvicorn bgremove.api:app --host 0.0.0.0 --port 8000 > /tmp/bgremove-api.log 2>&1 & sleep 3; if command -v gh >/dev/null 2>&1 && [ -n \"$CODESPACE_NAME\" ]; then gh codespace ports visibility 8000:public -c \"$CODESPACE_NAME\" || true; fi'",
   "remoteEnv": {
     "PYTHONPATH": "${containerWorkspaceFolder}/src"
   }
