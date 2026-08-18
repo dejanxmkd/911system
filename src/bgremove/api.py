@@ -101,6 +101,16 @@ def index():
     return FileResponse(index_path)
 
 
+@app.get("/styles.css")
+def styles():
+    return FileResponse(WEB_DIR / "styles.css", media_type="text/css")
+
+
+@app.get("/app.js")
+def frontend_js():
+    return FileResponse(WEB_DIR / "app.js", media_type="application/javascript")
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
