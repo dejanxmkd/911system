@@ -18,6 +18,11 @@ const approveButton=document.querySelector('#approve-button');
 const rejectButton=document.querySelector('#reject-button');
 const previousButton=document.querySelector('#previous-button');
 const nextButton=document.querySelector('#next-button');
+const pagesNote=document.querySelector('#pages-note');
+
+const isGitHubPages=location.hostname.endsWith('github.io');
+const apiBase=isGitHubPages?'':location.origin;
+if(isGitHubPages&&pagesNote) pagesNote.hidden=false;
 
 let sessionId=null;
 let items=[];
@@ -63,47 +68,38 @@ function goNextPending(){
 }
 
 async function decide(decision){
+  if(isGitHubPages){setStatus(true,'Preview only','Good/Bad decisions require the FastAPI backend.');setTimeout(()=>setStatus(false),2800);return;}
   if(!items.length||!sessionId)return;
   const item=items[currentIndex];
   try{
-    const response=await fetch(`/review/${sessionId}/${item.id}/decision`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({decision})
+    const response=await fetch(`${apiBase}/review/${sessionId}/${item.id}/decision`,{
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({decision})
     });
     if(!response.ok){const error=await response.json();throw new Error(error.detail||'Could not save decision.');}
-    item.decision=decision;
-    refreshStats();
-    goNextPending();
-  }catch(error){
-    setStatus(true,'Could not save review',error.message);
-    setTimeout(()=>setStatus(false),3500);
-  }
+    item.decision=decision;refreshStats();goNextPending();
+  }catch(error){setStatus(true,'Could not save review',error.message);setTimeout(()=>setStatus(false),3500);}
 }
 
 async function upload(files){
   if(!files||!files.length)return;
+  if(isGitHubPages){
+    setStatus(true,'Frontend preview','GitHub Pages can show the UI, but it cannot run the PyTorch/FastAPI model backend.');
+    return;
+  }
   const formData=new FormData();
   [...files].forEach(file=>formData.append('files',file));
   setStatus(true,'Processing images…',`${files.length} upload${files.length===1?'':'s'} queued. This can take a while for large ZIP folders.`);
   browseButton.disabled=true;
   try{
-    const response=await fetch('/review/upload',{method:'POST',body:formData});
+    const response=await fetch(`${apiBase}/review/upload`,{method:'POST',body:formData});
     const payload=await response.json();
     if(!response.ok)throw new Error(payload.detail||'Upload failed.');
-    sessionId=payload.session_id;
-    items=payload.items||[];
-    currentIndex=0;
-    renderCurrent();
+    sessionId=payload.session_id;items=payload.items||[];currentIndex=0;renderCurrent();
     const skipped=(payload.errors||[]).length;
     setStatus(true,'Ready for review',`${items.length} image${items.length===1?'':'s'} processed${skipped?` · ${skipped} skipped`:''}.`);
     setTimeout(()=>setStatus(false),2800);
-  }catch(error){
-    setStatus(true,'Processing failed',error.message);
-  }finally{
-    browseButton.disabled=false;
-    fileInput.value='';
-  }
+  }catch(error){setStatus(true,'Processing failed',error.message);}
+  finally{browseButton.disabled=false;fileInput.value='';}
 }
 
 browseButton.addEventListener('click',()=>fileInput.click());
