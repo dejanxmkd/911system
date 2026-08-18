@@ -13,8 +13,6 @@ from fastapi.staticfiles import StaticFiles
 from PIL import Image
 from pydantic import BaseModel
 
-from .inference import BackgroundRemover
-
 ROOT = Path(__file__).resolve().parents[2]
 WEB_DIR = ROOT / "web"
 RUNTIME_DIR = ROOT / "runtime" / "review"
@@ -48,6 +46,10 @@ def get_model():
             raise RuntimeError(
                 f"Model checkpoint not found at '{checkpoint}'. Train or provide a checkpoint first."
             )
+        try:
+            from .inference import BackgroundRemover
+        except Exception as exc:
+            raise RuntimeError(f"Model runtime is not ready: {exc}") from exc
         _model = BackgroundRemover(checkpoint)
     return _model
 
