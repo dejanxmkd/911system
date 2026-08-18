@@ -55,10 +55,94 @@ scripts/
   export_onnx.py
 requirements.txt
 Dockerfile
+docker-compose.yml
+run_local.sh
 .gitignore
 ```
 
-## Data layout
+## Review frontend
+
+The browser UI is served directly by FastAPI at `/`.
+
+It supports:
+
+- ZIP uploads with nested folders
+- JPG, JPEG, PNG, WEBP and BMP uploads
+- automatic background removal for every image
+- Original / Background removed side-by-side preview
+- ✓ Good / × Bad review decisions
+- `G` = Good, `X` = Bad, arrow keys = Previous / Next
+- reviewed data saved under `dataset/reviewed/`
+
+Approved and rejected items are stored separately with:
+
+```text
+dataset/reviewed/
+  approved/
+    images/
+    masks/
+    results/
+  rejected/
+    images/
+    masks/
+    results/
+```
+
+Only approved pairs should be promoted into the training dataset.
+
+## Important: model checkpoint
+
+The review UI itself can open without a checkpoint, but processing uploaded images requires a trained checkpoint.
+
+Default location:
+
+```text
+checkpoints/best.pt
+```
+
+You can override it with `BGREMOVE_CHECKPOINT`.
+
+## Run locally
+
+### Simplest: Docker
+
+Put the model at `checkpoints/best.pt`, then run:
+
+```bash
+docker compose up --build
+```
+
+Open:
+
+```text
+http://localhost:8000
+```
+
+The Docker setup now includes the `web/` frontend and persists `checkpoints/`, `dataset/`, and `runtime/` on the host.
+
+### Without Docker
+
+```bash
+chmod +x run_local.sh
+./run_local.sh
+```
+
+Then open:
+
+```text
+http://localhost:8000
+```
+
+Or manually:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+PYTHONPATH=src uvicorn bgremove.api:app --host 0.0.0.0 --port 8000
+```
+
+## Data layout for training
 
 ```text
 data/
@@ -75,28 +159,6 @@ data/
 
 Each image must have a matching mask with the same filename stem.
 
-## Review and approval workflow
-
-The FastAPI application now includes a browser-based dataset review tool.
-
-1. Upload one or more ZIP folders or individual images.
-2. The current background-removal checkpoint processes every supported image.
-3. The UI shows **Original** and **Background removed** side by side.
-4. Mark the result with **✓ Good** or **× Bad**.
-5. Approved and rejected examples are stored separately under `dataset/reviewed/` with the original image, generated mask and transparent result.
-6. Only approved examples should later be promoted into the training dataset.
-
-Supported upload formats: ZIP, JPG, JPEG, PNG, WEBP and BMP.
-
-Keyboard review shortcuts:
-
-- `G` = Good
-- `X` = Bad
-- `←` = Previous
-- `→` = Next
-
-The review UI requires a usable model checkpoint. By default the API expects `checkpoints/best.pt`; set `BGREMOVE_CHECKPOINT` to use another checkpoint.
-
 ## Training plan
 
 1. Validate image/mask pairs and split train/validation/test.
@@ -110,29 +172,13 @@ The review UI requires a usable model checkpoint. By default the API expects `ch
 
 ## Permanent implementation rule
 
-This repository is the source of truth for this new project. All future work should extend the existing modules and configuration instead of replacing the architecture ad hoc. New features must be added in the smallest compatible way possible and should not silently change existing behavior, defaults, dataset conventions, model I/O, metrics, or deployment interfaces.
+This repository is the source of truth for this project. All future work should extend the existing modules and configuration instead of replacing the architecture ad hoc. New features must be added in the smallest compatible way possible and should not silently change existing behavior, defaults, dataset conventions, model I/O, metrics, or deployment interfaces.
 
-## Quick start
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-Run training:
+## Training
 
 ```bash
 python scripts/train.py --config configs/train.yaml
 ```
-
-Run the API + review UI:
-
-```bash
-PYTHONPATH=src uvicorn bgremove.api:app --host 0.0.0.0 --port 8000
-```
-
-Then open `http://localhost:8000` in the browser.
 
 Evaluation:
 
