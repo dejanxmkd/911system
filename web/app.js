@@ -21,12 +21,33 @@ const nextButton=document.querySelector('#next-button');
 const pagesNote=document.querySelector('#pages-note');
 
 const isGitHubPages=location.hostname.endsWith('github.io');
-const apiBase=isGitHubPages?'':location.origin;
-if(isGitHubPages&&pagesNote) pagesNote.hidden=false;
+const params=new URLSearchParams(location.search);
+const queryApi=params.get('api');
+if(queryApi) localStorage.setItem('bgremoveApiBase',queryApi.replace(/\/$/,''));
+const savedApi=localStorage.getItem('bgremoveApiBase');
+const apiBase=isGitHubPages?(savedApi||''):location.origin;
+
+if(isGitHubPages&&pagesNote){
+  pagesNote.hidden=false;
+  pagesNote.innerHTML=apiBase
+    ? `<strong>Backend connected</strong><span>${apiBase}</span>`
+    : '<strong>Backend not connected</strong><span>Start the GitHub Codespace backend, then open this page with ?api=YOUR_BACKEND_URL once.</span>';
+}
 
 let sessionId=null;
 let items=[];
 let currentIndex=0;
+
+function apiUrl(path){
+  if(!apiBase) return path;
+  return `${apiBase}${path}`;
+}
+
+function assetUrl(path){
+  if(!path) return '';
+  if(/^https?:\/\//i.test(path)) return path;
+  return apiUrl(path.startsWith('/')?path:`/${path}`);
+}
 
 function setStatus(show,title='',message='',loading=true){
   statusBar.hidden=!show;
@@ -35,6 +56,26 @@ function setStatus(show,title='',message='',loading=true){
     statusMessage.textContent=message;
     const spinner=statusBar.querySelector('.spinner');
     if(spinner) spinner.hidden=!loading;
+  }
+}
+
+async function checkBackend(){
+  if(!apiBase) return;
+  try{
+    const response=await fetch(apiUrl('/health'));
+    if(!response.ok) throw new Error('Backend health check failed.');
+    const health=await response.json();
+    if(isGitHubPages&&pagesNote){
+      pagesNote.hidden=false;
+      pagesNote.innerHTML=health.model_ready
+        ? `<strong>Backend connected</strong><span>Model ready · ${apiBase}</span>`
+        : `<strong>Backend connected</strong><span>Server is online, but model checkpoint is not ready yet.</span>`;
+    }
+  }catch(error){
+    if(isGitHubPages&&pagesNote){
+      pagesNote.hidden=false;
+      pagesNote.innerHTML='<strong>Backend unavailable</strong><span>The saved backend URL is not reachable right now.</span>';
+    }
   }
 }
 
@@ -50,8 +91,8 @@ function renderCurrent(){
   emptyState.hidden=true;
   review.hidden=false;
   reviewName.textContent=item.name;
-  originalImage.src=item.original;
-  resultImage.src=item.result;
+  originalImage.src=assetUrl(item.original);
+  resultImage.src=assetUrl(item.result);
   currentIndexEl.textContent=currentIndex+1;
   totalCountEl.textContent=items.length;
   previousButton.disabled=currentIndex===0;
@@ -73,15 +114,15 @@ function goNextPending(){
 }
 
 async function decide(decision){
-  if(isGitHubPages){
-    setStatus(true,'Backend not connected','Good/Bad review will work once the PyTorch/FastAPI backend is running.',false);
+  if(!apiBase){
+    setStatus(true,'Backend not connected','Start the GitHub Codespace backend and connect its public port URL first.',false);
     setTimeout(()=>setStatus(false),3500);
     return;
   }
   if(!items.length||!sessionId)return;
   const item=items[currentIndex];
   try{
-    const response=await fetch(`${apiBase}/review/${sessionId}/${item.id}/decision`,{
+    const response=await fetch(apiUrl(`/review/${sessionId}/${item.id}/decision`),{
       method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({decision})
     });
     if(!response.ok){const error=await response.json();throw new Error(error.detail||'Could not save decision.');}
@@ -91,8 +132,8 @@ async function decide(decision){
 
 async function upload(files){
   if(!files||!files.length)return;
-  if(isGitHubPages){
-    setStatus(true,'Backend not connected','The files were selected, but GitHub Pages cannot process them. We still need to connect the model backend.',false);
+  if(!apiBase){
+    setStatus(true,'Backend not connected','The files were selected, but the model server is not connected yet.',false);
     fileInput.value='';
     setTimeout(()=>setStatus(false),5000);
     return;
@@ -102,7 +143,7 @@ async function upload(files){
   setStatus(true,'Processing images…',`${files.length} upload${files.length===1?'':'s'} queued. This can take a while for large ZIP folders.`,true);
   browseButton.disabled=true;
   try{
-    const response=await fetch(`${apiBase}/review/upload`,{method:'POST',body:formData});
+    const response=await fetch(apiUrl('/review/upload'),{method:'POST',body:formData});
     const payload=await response.json();
     if(!response.ok)throw new Error(payload.detail||'Upload failed.');
     sessionId=payload.session_id;items=payload.items||[];currentIndex=0;renderCurrent();
@@ -132,3 +173,4 @@ window.addEventListener('keydown',event=>{
 });
 
 renderCurrent();
+checkBackend();
