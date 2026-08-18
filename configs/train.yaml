@@ -1,0 +1,47 @@
+seed: 42
+
+data:
+  root: data
+  train_images: data/train/images
+  train_masks: data/train/masks
+  val_images: data/val/images
+  val_masks: data/val/masks
+  test_images: data/test/images
+  test_masks: data/test/masks
+  image_size: 512
+  num_workers: 4
+
+model:
+  name: u2net_lite
+  in_channels: 3
+  out_channels: 1
+
+training:
+  epochs: 80
+  batch_size: 8
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+  amp: true
+  grad_clip: 1.0
+  checkpoint_dir: checkpoints
+  log_dir: runs
+
+loss:
+  bce_weight: 0.50
+  dice_weight: 0.35
+  boundary_weight: 0.15
+
+postprocess:
+  threshold: 0.5
+  feather_radius: 1
+  use_alpha_refinement: false
+
+metrics:
+  target_mae: 0.020
+  target_fmeasure: 0.95
+  target_iou: 0.93
+
+export:
+  onnx_path: exports/background_removal.onnx
+  opset: 17
+  dynamic_axes: true
