@@ -25,6 +25,7 @@ Train a high-quality image segmentation / alpha-matting pipeline for automatic b
 - pymatting for optional alpha-matting refinement
 - ONNX export with TensorRT-ready deployment path
 - FastAPI + Uvicorn REST API
+- Plain HTML/CSS/JS review frontend
 - TensorBoard monitoring
 - Docker deployment
 
@@ -44,6 +45,10 @@ src/bgremove/
   evaluate.py
   export.py
   api.py
+web/
+  index.html
+  styles.css
+  app.js
 scripts/
   train.py
   evaluate.py
@@ -70,6 +75,28 @@ data/
 
 Each image must have a matching mask with the same filename stem.
 
+## Review and approval workflow
+
+The FastAPI application now includes a browser-based dataset review tool.
+
+1. Upload one or more ZIP folders or individual images.
+2. The current background-removal checkpoint processes every supported image.
+3. The UI shows **Original** and **Background removed** side by side.
+4. Mark the result with **✓ Good** or **× Bad**.
+5. Approved and rejected examples are stored separately under `dataset/reviewed/` with the original image, generated mask and transparent result.
+6. Only approved examples should later be promoted into the training dataset.
+
+Supported upload formats: ZIP, JPG, JPEG, PNG, WEBP and BMP.
+
+Keyboard review shortcuts:
+
+- `G` = Good
+- `X` = Bad
+- `←` = Previous
+- `→` = Next
+
+The review UI requires a usable model checkpoint. By default the API expects `checkpoints/best.pt`; set `BGREMOVE_CHECKPOINT` to use another checkpoint.
+
 ## Training plan
 
 1. Validate image/mask pairs and split train/validation/test.
@@ -91,8 +118,21 @@ This repository is the source of truth for this new project. All future work sho
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+```
+
+Run training:
+
+```bash
 python scripts/train.py --config configs/train.yaml
 ```
+
+Run the API + review UI:
+
+```bash
+PYTHONPATH=src uvicorn bgremove.api:app --host 0.0.0.0 --port 8000
+```
+
+Then open `http://localhost:8000` in the browser.
 
 Evaluation:
 
@@ -104,10 +144,4 @@ ONNX export:
 
 ```bash
 python scripts/export_onnx.py --config configs/train.yaml --checkpoint checkpoints/best.pt
-```
-
-API:
-
-```bash
-uvicorn bgremove.api:app --host 0.0.0.0 --port 8000
 ```
