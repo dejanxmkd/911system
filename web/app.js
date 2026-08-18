@@ -21,17 +21,16 @@ const nextButton=document.querySelector('#next-button');
 const pagesNote=document.querySelector('#pages-note');
 
 const isGitHubPages=location.hostname.endsWith('github.io');
+const DEFAULT_API='https://ubiquitous-garbanzo-4v7gw5p57x5hjrqv-8000.app.github.dev';
 const params=new URLSearchParams(location.search);
 const queryApi=params.get('api');
 if(queryApi) localStorage.setItem('bgremoveApiBase',queryApi.replace(/\/$/,''));
 const savedApi=localStorage.getItem('bgremoveApiBase');
-const apiBase=isGitHubPages?(savedApi||''):location.origin;
+const apiBase=isGitHubPages?(savedApi||DEFAULT_API):location.origin;
 
 if(isGitHubPages&&pagesNote){
   pagesNote.hidden=false;
-  pagesNote.innerHTML=apiBase
-    ? `<strong>Backend connected</strong><span>${apiBase}</span>`
-    : '<strong>Backend not connected</strong><span>Start the GitHub Codespace backend, then open this page with ?api=YOUR_BACKEND_URL once.</span>';
+  pagesNote.innerHTML=`<strong>Checking backend…</strong><span>${apiBase}</span>`;
 }
 
 let sessionId=null;
@@ -60,21 +59,20 @@ function setStatus(show,title='',message='',loading=true){
 }
 
 async function checkBackend(){
-  if(!apiBase) return;
   try{
-    const response=await fetch(apiUrl('/health'));
+    const response=await fetch(apiUrl('/health'),{cache:'no-store'});
     if(!response.ok) throw new Error('Backend health check failed.');
     const health=await response.json();
     if(isGitHubPages&&pagesNote){
       pagesNote.hidden=false;
       pagesNote.innerHTML=health.model_ready
-        ? `<strong>Backend connected</strong><span>Model ready · ${apiBase}</span>`
-        : `<strong>Backend connected</strong><span>Server is online, but model checkpoint is not ready yet.</span>`;
+        ? `<strong>Backend connected</strong><span>Model ready</span>`
+        : `<strong>Backend connected</strong><span>Server online · model checkpoint not ready yet</span>`;
     }
   }catch(error){
     if(isGitHubPages&&pagesNote){
       pagesNote.hidden=false;
-      pagesNote.innerHTML='<strong>Backend unavailable</strong><span>The saved backend URL is not reachable right now.</span>';
+      pagesNote.innerHTML='<strong>Backend unavailable</strong><span>Keep the GitHub Codespace running and port 8000 public.</span>';
     }
   }
 }
@@ -114,11 +112,6 @@ function goNextPending(){
 }
 
 async function decide(decision){
-  if(!apiBase){
-    setStatus(true,'Backend not connected','Start the GitHub Codespace backend and connect its public port URL first.',false);
-    setTimeout(()=>setStatus(false),3500);
-    return;
-  }
   if(!items.length||!sessionId)return;
   const item=items[currentIndex];
   try{
@@ -132,15 +125,9 @@ async function decide(decision){
 
 async function upload(files){
   if(!files||!files.length)return;
-  if(!apiBase){
-    setStatus(true,'Backend not connected','The files were selected, but the model server is not connected yet.',false);
-    fileInput.value='';
-    setTimeout(()=>setStatus(false),5000);
-    return;
-  }
   const formData=new FormData();
   [...files].forEach(file=>formData.append('files',file));
-  setStatus(true,'Processing images…',`${files.length} upload${files.length===1?'':'s'} queued. This can take a while for large ZIP folders.`,true);
+  setStatus(true,'Processing images…',`${files.length} upload${files.length===1?'':'s'} queued.`,true);
   browseButton.disabled=true;
   try{
     const response=await fetch(apiUrl('/review/upload'),{method:'POST',body:formData});
@@ -150,8 +137,12 @@ async function upload(files){
     const skipped=(payload.errors||[]).length;
     setStatus(true,'Ready for review',`${items.length} image${items.length===1?'':'s'} processed${skipped?` · ${skipped} skipped`:''}.`,false);
     setTimeout(()=>setStatus(false),2800);
-  }catch(error){setStatus(true,'Processing failed',error.message,false);}
-  finally{browseButton.disabled=false;fileInput.value='';}
+  }catch(error){
+    setStatus(true,'Processing failed',error.message||'Could not reach the backend.',false);
+  }finally{
+    browseButton.disabled=false;
+    fileInput.value='';
+  }
 }
 
 browseButton.addEventListener('click',()=>fileInput.click());
