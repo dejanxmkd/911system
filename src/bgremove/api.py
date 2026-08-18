@@ -7,6 +7,7 @@ from pathlib import Path
 
 import numpy as np
 from fastapi import Body, FastAPI, File, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from PIL import Image
@@ -21,6 +22,18 @@ DATASET_DIR = ROOT / "dataset" / "reviewed"
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
 
 app = FastAPI(title="AI Background Removal API")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://dejanxmkd.github.io",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 if WEB_DIR.exists():
     app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
 
@@ -31,6 +44,10 @@ def get_model():
     global _model
     if _model is None:
         checkpoint = os.getenv("BGREMOVE_CHECKPOINT", "checkpoints/best.pt")
+        if not Path(checkpoint).exists():
+            raise RuntimeError(
+                f"Model checkpoint not found at '{checkpoint}'. Train or provide a checkpoint first."
+            )
         _model = BackgroundRemover(checkpoint)
     return _model
 
@@ -113,7 +130,12 @@ def frontend_js():
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    checkpoint = os.getenv("BGREMOVE_CHECKPOINT", "checkpoints/best.pt")
+    return {
+        "status": "ok",
+        "checkpoint": checkpoint,
+        "model_ready": Path(checkpoint).exists(),
+    }
 
 
 @app.post("/remove-background")
