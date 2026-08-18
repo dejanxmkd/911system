@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Background Removal Review</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">AI Model Review</p>
+        <h1>Background Removal</h1>
+        <p class="subcopy">Upload ZIP folders or images, review each result, and approve only the masks you want to use for training.</p>
+      </div>
+      <div class="stats" aria-label="Review progress">
+        <div><span id="pending-count">0</span><small>Pending</small></div>
+        <div><span id="approved-count">0</span><small>Good</small></div>
+        <div><span id="rejected-count">0</span><small>Bad</small></div>
+      </div>
+    </header>
+
+    <section class="upload-card" id="drop-zone">
+      <input id="file-input" type="file" accept=".zip,image/*" multiple hidden />
+      <div class="upload-icon">↑</div>
+      <h2>Drop ZIP folders or images here</h2>
+      <p>ZIP, JPG, JPEG, PNG, WEBP or BMP</p>
+      <button id="browse-button" type="button">Choose files</button>
+      <p class="hint">Every image is processed automatically and placed in the review queue.</p>
+    </section>
+
+    <section class="status-bar" id="status-bar" hidden>
+      <div>
+        <strong id="status-title">Processing images…</strong>
+        <p id="status-message">Preparing review session</p>
+      </div>
+      <div class="spinner" aria-hidden="true"></div>
+    </section>
+
+    <section class="review" id="review" hidden>
+      <div class="review-head">
+        <div>
+          <p class="eyebrow">Review queue</p>
+          <h2 id="review-name">Image</h2>
+        </div>
+        <div class="progress-label"><span id="current-index">1</span> / <span id="total-count">1</span></div>
+      </div>
+
+      <div class="comparison-grid">
+        <article class="image-panel">
+          <div class="panel-label">Original</div>
+          <div class="image-stage plain"><img id="original-image" alt="Original uploaded image" /></div>
+        </article>
+        <article class="image-panel">
+          <div class="panel-label">Background removed</div>
+          <div class="image-stage checker"><img id="result-image" alt="Background removed result" /></div>
+        </article>
+      </div>
+
+      <div class="review-actions">
+        <button class="decision bad" id="reject-button" type="button"><span>×</span> Bad</button>
+        <button class="secondary" id="previous-button" type="button">Previous</button>
+        <button class="secondary" id="next-button" type="button">Next</button>
+        <button class="decision good" id="approve-button" type="button"><span>✓</span> Good</button>
+      </div>
+      <p class="keyboard-hint">Keyboard: ← previous · → next · X bad · G good</p>
+    </section>
+
+    <section class="empty-state" id="empty-state">
+      <h2>No images yet</h2>
+      <p>Upload your first ZIP folder to start building the reviewed training dataset.</p>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
