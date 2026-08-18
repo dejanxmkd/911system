@@ -1,0 +1,11 @@
+services:
+  bgremove:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      BGREMOVE_CHECKPOINT: /app/checkpoints/best.pt
+    volumes:
+      - ./checkpoints:/app/checkpoints
+      - ./dataset:/app/dataset
+      - ./runtime:/app/runtime
