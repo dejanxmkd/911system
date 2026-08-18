@@ -28,9 +28,14 @@ let sessionId=null;
 let items=[];
 let currentIndex=0;
 
-function setStatus(show,title='',message=''){
+function setStatus(show,title='',message='',loading=true){
   statusBar.hidden=!show;
-  if(show){statusTitle.textContent=title;statusMessage.textContent=message;}
+  if(show){
+    statusTitle.textContent=title;
+    statusMessage.textContent=message;
+    const spinner=statusBar.querySelector('.spinner');
+    if(spinner) spinner.hidden=!loading;
+  }
 }
 
 function refreshStats(){
@@ -68,7 +73,11 @@ function goNextPending(){
 }
 
 async function decide(decision){
-  if(isGitHubPages){setStatus(true,'Preview only','Good/Bad decisions require the FastAPI backend.');setTimeout(()=>setStatus(false),2800);return;}
+  if(isGitHubPages){
+    setStatus(true,'Backend not connected','Good/Bad review will work once the PyTorch/FastAPI backend is running.',false);
+    setTimeout(()=>setStatus(false),3500);
+    return;
+  }
   if(!items.length||!sessionId)return;
   const item=items[currentIndex];
   try{
@@ -77,18 +86,20 @@ async function decide(decision){
     });
     if(!response.ok){const error=await response.json();throw new Error(error.detail||'Could not save decision.');}
     item.decision=decision;refreshStats();goNextPending();
-  }catch(error){setStatus(true,'Could not save review',error.message);setTimeout(()=>setStatus(false),3500);}
+  }catch(error){setStatus(true,'Could not save review',error.message,false);setTimeout(()=>setStatus(false),3500);}
 }
 
 async function upload(files){
   if(!files||!files.length)return;
   if(isGitHubPages){
-    setStatus(true,'Frontend preview','GitHub Pages can show the UI, but it cannot run the PyTorch/FastAPI model backend.');
+    setStatus(true,'Backend not connected','The files were selected, but GitHub Pages cannot process them. We still need to connect the model backend.',false);
+    fileInput.value='';
+    setTimeout(()=>setStatus(false),5000);
     return;
   }
   const formData=new FormData();
   [...files].forEach(file=>formData.append('files',file));
-  setStatus(true,'Processing images…',`${files.length} upload${files.length===1?'':'s'} queued. This can take a while for large ZIP folders.`);
+  setStatus(true,'Processing images…',`${files.length} upload${files.length===1?'':'s'} queued. This can take a while for large ZIP folders.`,true);
   browseButton.disabled=true;
   try{
     const response=await fetch(`${apiBase}/review/upload`,{method:'POST',body:formData});
@@ -96,9 +107,9 @@ async function upload(files){
     if(!response.ok)throw new Error(payload.detail||'Upload failed.');
     sessionId=payload.session_id;items=payload.items||[];currentIndex=0;renderCurrent();
     const skipped=(payload.errors||[]).length;
-    setStatus(true,'Ready for review',`${items.length} image${items.length===1?'':'s'} processed${skipped?` · ${skipped} skipped`:''}.`);
+    setStatus(true,'Ready for review',`${items.length} image${items.length===1?'':'s'} processed${skipped?` · ${skipped} skipped`:''}.`,false);
     setTimeout(()=>setStatus(false),2800);
-  }catch(error){setStatus(true,'Processing failed',error.message);}
+  }catch(error){setStatus(true,'Processing failed',error.message,false);}
   finally{browseButton.disabled=false;fileInput.value='';}
 }
 
